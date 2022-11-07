@@ -8,7 +8,7 @@ function project()
     for index = 1:length(directories_on_path)
         if contains(directories_on_path(index),"TEST_IMAGES")
         %         files = show_all_files_in_dir(directories_on_path(index));
-            patterns = ["/*.JPG"];
+            patterns = ["/*3108*.JPG"];
             files = dir(directories_on_path(index) + patterns(1));
         end
         numberOfFiles = length(files);
@@ -17,7 +17,7 @@ function project()
             imrgb = im2double(imread(currentFile));
             segment_and_get_edges(imrgb);
             clc
-            close all;
+%             close all;
         end
         break;
     end
@@ -26,34 +26,32 @@ end
 function segment_and_get_edges(im)
     color_comp = segment(im);
     color_comp = 1 - imbinarize(im2double(color_comp(:, :, 1)));
-    color_comp = imerode(color_comp, strel("disk", 2));
+    color_comp = imerode(color_comp, strel("disk", 5));
     figure; imshow(color_comp);
-    disp(size(color_comp));
-    fltr_dIdy = [ -1 -2 -1; 0 0 0 ; +1 +2 +1 ] / 8;
-    fltr_dIdx = [ -1 0 +1; -2 0 +2 ; -1 0 +1 ] / 8;
-    dIdy = imfilter( rgb2gray(im), fltr_dIdy);
-    dIdx = imfilter( rgb2gray(im), fltr_dIdx);
-    dImag = sqrt( dIdy.^2 + dIdx.^2 );
-    figure; imshow(1-dImag);
-    figure;
-    histogram(dImag);
-    cutoff_value = prctile(dImag,90,"all");
-    disp("Cutoff Value: " + cutoff_value);
-    newmat = zeros(size(dImag));
-    newmat = 1 - newmat;
-    k = size(newmat);
-    newmat = dImag > cutoff_value;
-    newmat = 1 - newmat;
-    figure; imshow(newmat);
-    result = ones(k);
-    for row =  1:k(1)                                                           % Iterate till the last valid row.
-        for col =  1:k(2)
-            if newmat(row, col) == color_comp(row, col)
-                result(row, col) = newmat(row, col);
-            end
-        end
-    end
-    figure; imshow(result);
+    figure; imshow(edge(color_comp, "canny"));
+%     fltr_dIdy = [ -1 -2 -1; 0 0 0 ; +1 +2 +1 ] / 8;
+%     fltr_dIdx = [ -1 0 +1; -2 0 +2 ; -1 0 +1 ] / 8;
+%     dIdy = imfilter( rgb2gray(im), fltr_dIdy);
+%     dIdx = imfilter( rgb2gray(im), fltr_dIdx);
+%     dImag = sqrt( dIdy.^2 + dIdx.^2 );
+%     figure; imshow(1-dImag);
+%     cutoff_value = prctile(dImag,90,"all");
+%     disp("Cutoff Value: " + cutoff_value);
+%     newmat = zeros(size(dImag));
+%     newmat = 1 - newmat;
+%     k = size(newmat);
+%     newmat = dImag > cutoff_value;
+%     newmat = 1 - newmat;
+%     figure; imshow(newmat);
+%     result = ones(k);
+%     for row =  1:k(1)        % Iterate till the last valid row.
+%         for col =  1:k(2)
+%             if newmat(row, col) == color_comp(row, col)
+%                 result(row, col) = newmat(row, col);
+%             end
+%         end
+%     end
+%     figure; imshow(result);
 end
 
 
