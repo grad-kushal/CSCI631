@@ -5,20 +5,7 @@ Leaf_Classification("/Users/swetna/Documents/MATLAB/Project_Images/IMG_3158.jpeg
 
 function Leaf_Classification( fn_in )
 
-%  Get location of raspberries from the user.
-%  Get location of other pixels from the user.
-%
-%  Get color values -- samples - of the raspberries.
-%  Get other color values.
-% 
-%  For each input pixel, figure out distance to the raspberry colors.
-%  For each input pixel, find   distance to the background colors.
-%  If a pixel is closer to the orange color than to a the other,
 
-
-%       classify it as a orange
-%  else
-%       call it a background pixel.
 %
 GET_USER_INPUT = false;
     
@@ -36,7 +23,7 @@ GET_USER_INPUT = false;
     axis image;
     
   
-        %  Get location of oranges from the user.
+        %  Get location of leaves from the user.
         fprintf('Click on the Leaves\n');
         beep();
         [rxs,rys] = ginput();
@@ -69,7 +56,7 @@ GET_USER_INPUT = false;
     disp('break here');
     
     % 
-    %  For each input pixel, figure out distance to the oranges colors.
+    %  For each input pixel, figure out distance to the leaves colors.
     [im_red, im_grn, im_blu] = imsplit( im );
     
     pixel_data = [ im_red(:), im_grn(:), im_blu(:) ];
@@ -77,8 +64,8 @@ GET_USER_INPUT = false;
     
     
     %  For each input pixel, find   distance to the background colors.
-    %  If a pixel is closer to the orange color than to a the other,
-    %       classify it as a orange
+    %  If a pixel is closer to the leaf color than to a the other,
+    %       classify it as a leaf
     %  else
     %       call it a background pixel.
     %
