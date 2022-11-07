@@ -49,9 +49,10 @@ GET_USER_INPUT = false;
    
 
         
+        
     
     %
-    %  Get color values -- samples - of the oranges.
+    %  Get color values 
     rxs = round( rxs );
     rys = round( rys );
     for leaf_idx = 1 : length( rxs )
