@@ -26,11 +26,9 @@ end
 
 function segment_and_get_edges(im)
     color_comp = segment(im);
-    figure; imshow(color_comp);
-    color_comp1 = bwareaopen(color_comp, 50, 8);
-    figure; imshow(color_comp1);
-    color_comp2 = bwareaopen(color_comp, 1000, 8);
-    figure; imshow(color_comp2);
+    color_comp = bwareaopen(color_comp, 500, 8);                            % Remove smaller objects which are not of concern
+    color_comp = imfill(color_comp,'holes');                                % Remove holes from the leaf
+    figure; imshow(color_comp);                                             % Disply segmented image
 %     [boundary_pixels, ~] = bwboundaries(color_comp,'noholes');
 %     figure; imshow(imerode(color_comp, strel('disk',4)));
 %     hold on
@@ -41,35 +39,34 @@ function segment_and_get_edges(im)
 %     color_comp = 1 - imbinarize(im2double(color_comp(:, :, 1)));
 %     color_comp = imerode(color_comp, strel("disk", 5));
     figure; imshow(edge(color_comp, "canny"));
-%     fltr_dIdy = [ -1 -2 -1; 0 0 0 ; +1 +2 +1 ] / 8;
-%     fltr_dIdx = [ -1 0 +1; -2 0 +2 ; -1 0 +1 ] / 8;
-%     dIdy = imfilter( rgb2gray(im), fltr_dIdy);
-%     dIdx = imfilter( rgb2gray(im), fltr_dIdx);
-%     dImag = sqrt( dIdy.^2 + dIdx.^2 );
-%     figure; imshow(1-dImag);
-%     cutoff_value = prctile(dImag,90,"all");
-%     disp("Cutoff Value: " + cutoff_value);
-%     newmat = zeros(size(dImag));
-%     newmat = 1 - newmat;
-%     k = size(newmat);
-%     newmat = dImag > cutoff_value;
-%     newmat = 1 - newmat;
-%     figure; imshow(newmat);
-%     result = ones(k);
-%     for row =  1:k(1)        % Iterate till the last valid row.
-%         for col =  1:k(2)
-%             if newmat(row, col) == color_comp(row, col)
-%                 result(row, col) = newmat(row, col);
-%             end
-%         end
-%     end
-%     figure; imshow(result);
+    fltr_dIdy = [ -1 -2 -1; 0 0 0 ; +1 +2 +1 ] / 8;
+    fltr_dIdx = [ -1 0 +1; -2 0 +2 ; -1 0 +1 ] / 8;
+    dIdy = imfilter( rgb2gray(im), fltr_dIdy);
+    dIdx = imfilter( rgb2gray(im), fltr_dIdx);
+    dImag = sqrt( dIdy.^2 + dIdx.^2 );
+    figure; imshow(1-dImag);
+    cutoff_value = prctile(dImag,40,"all");
+    disp("Cutoff Value: " + cutoff_value);
+    newmat = zeros(size(dImag));
+    newmat = 1 - newmat;
+    k = size(newmat);
+    newmat = dImag > cutoff_value;
+    figure; imshow(newmat);
+    result = ones(k);
+    for row =  1:k(1)        % Iterate till the last valid row.
+        for col =  1:k(2)
+            if newmat(row, col) == color_comp(row, col)
+                result(row, col) = newmat(row, col);
+            end
+        end
+    end
+    figure; imshow(result);
 end
 
 
 function b_is_fg = segment( im )
     disp(size(im))
-    im_contrast = max(im(:)) - min(im(:));
+    im_contrast = max(im) - min(im);
     if im_contrast < 0.9700                                                 % enhance contrast if necessary
         im_lab = rgb2lab(im);
         max_luminosity = 100;
