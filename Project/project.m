@@ -8,15 +8,15 @@ function project()
     for index = 1:length(directories_on_path)
         if contains(directories_on_path(index),"TEST_IMAGES")
         %         files = show_all_files_in_dir(directories_on_path(index));
-            patterns = ["/*3127.JPG"];
+            patterns = ["/*.JPG"];
             files = dir(directories_on_path(index) + patterns(1));
         end
         numberOfFiles = length(files);
         for i = 1:numberOfFiles                                             % For each image
             currentFile = files(i).name;
             imrgb = im2double(imread(currentFile));
-            imrgb = imcrop(imrgb, [1000 1000 4000 3000]);
-            segment_and_get_edges(imrgb);
+            imrgb = imcrop(imrgb, [500 500 5500 3500]);                   % Cropping out the irrelevant part
+            segment_and_get_edges(imrgb, currentFile);                                   % Calling the function to segment the image and get edge details
 %             clc
 %             close all;
         end
@@ -24,27 +24,20 @@ function project()
     end
 end
 
-function segment_and_get_edges(im)
+function segment_and_get_edges(im, currentFile)
     color_comp = segment(im);
     color_comp = bwareaopen(color_comp, 500, 8);                            % Remove smaller objects which are not of concern
     color_comp = imfill(color_comp,'holes');                                % Remove holes from the leaf
     figure; imshow(color_comp);                                             % Disply segmented image
-%     [boundary_pixels, ~] = bwboundaries(color_comp,'noholes');
-%     figure; imshow(imerode(color_comp, strel('disk',4)));
-%     hold on
-%     for i = 1:length(boundary_pixels)
-%         boundary = boundary_pixels{i};
-%         plot(boundary(:,2), boundary(:,1), 'c', 'LineWidth', 2);
-%     end
-%     color_comp = 1 - imbinarize(im2double(color_comp(:, :, 1)));
-%     color_comp = imerode(color_comp, strel("disk", 5));
+    details = regionprops(color_comp, 'centroid');
+    disp(details)
     figure; imshow(edge(color_comp, "canny"));
     fltr_dIdy = [ -1 -2 -1; 0 0 0 ; +1 +2 +1 ] / 8;
     fltr_dIdx = [ -1 0 +1; -2 0 +2 ; -1 0 +1 ] / 8;
     dIdy = imfilter( rgb2gray(im), fltr_dIdy);
     dIdx = imfilter( rgb2gray(im), fltr_dIdx);
     dImag = sqrt( dIdy.^2 + dIdx.^2 );
-    figure; imshow(1-dImag);
+%     figure; imshow(1-dImag);
     threshold = prctile(dImag,45,"all");                                 % Get edge magnitude stronger than a threshold to get the details like veins
     disp("Threshold value: " + threshold);
 %     newmat = zeros(size(dImag));
@@ -60,9 +53,11 @@ function segment_and_get_edges(im)
             end
         end
     end
-    figure; imshow(1-result);
+%     figure; imshow(1-result);
     greenresult = cat(3, zeros(k) , 1-result, zeros(k));
     figure; imshow(greenresult);                                         % Show the leaf with details in green
+    currentFile = "out/output_" + currentFile + ".png";
+    imwrite(greenresult, currentFile)
 end
 
 
