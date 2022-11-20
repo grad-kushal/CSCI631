@@ -45,22 +45,24 @@ function segment_and_get_edges(im)
     dIdx = imfilter( rgb2gray(im), fltr_dIdx);
     dImag = sqrt( dIdy.^2 + dIdx.^2 );
     figure; imshow(1-dImag);
-    cutoff_value = prctile(dImag,40,"all");
-    disp("Cutoff Value: " + cutoff_value);
-    newmat = zeros(size(dImag));
-    newmat = 1 - newmat;
-    k = size(newmat);
-    newmat = dImag > cutoff_value;
-    figure; imshow(newmat);
+    threshold = prctile(dImag,45,"all");                                 % Get edge magnitude stronger than a threshold to get the details like veins
+    disp("Threshold value: " + threshold);
+%     newmat = zeros(size(dImag));
+%     newmat = 1 - newmat;
+    k = size(dImag);
+    newmat = dImag > threshold;                                          % Create a new image with only the edges stronger than the threshold
+%     figure; imshow(newmat);
     result = ones(k);
     for row =  1:k(1)        % Iterate till the last valid row.
         for col =  1:k(2)
-            if newmat(row, col) == color_comp(row, col)
-                result(row, col) = newmat(row, col);
+            if newmat(row, col) ~= color_comp(row, col)                                 
+                result(row, col) = newmat(row, col);                     % Map the strong edges from the image only inside the leaf
             end
         end
     end
-    figure; imshow(result);
+    figure; imshow(1-result);
+    greenresult = cat(3, zeros(k) , 1-result, zeros(k));
+    figure; imshow(greenresult);                                         % Show the leaf with details in green
 end
 
 
