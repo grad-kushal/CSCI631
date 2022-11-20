@@ -8,15 +8,16 @@ function project()
     for index = 1:length(directories_on_path)
         if contains(directories_on_path(index),"TEST_IMAGES")
         %         files = show_all_files_in_dir(directories_on_path(index));
-            patterns = ["/*3108*.JPG"];
+            patterns = ["/*3127.JPG"];
             files = dir(directories_on_path(index) + patterns(1));
         end
         numberOfFiles = length(files);
         for i = 1:numberOfFiles                                             % For each image
             currentFile = files(i).name;
             imrgb = im2double(imread(currentFile));
+            imrgb = imcrop(imrgb, [1000 1000 4000 3000]);
             segment_and_get_edges(imrgb);
-            clc
+%             clc
 %             close all;
         end
         break;
@@ -25,9 +26,20 @@ end
 
 function segment_and_get_edges(im)
     color_comp = segment(im);
-    color_comp = 1 - imbinarize(im2double(color_comp(:, :, 1)));
-    color_comp = imerode(color_comp, strel("disk", 5));
     figure; imshow(color_comp);
+    color_comp1 = bwareaopen(color_comp, 50, 8);
+    figure; imshow(color_comp1);
+    color_comp2 = bwareaopen(color_comp, 1000, 8);
+    figure; imshow(color_comp2);
+%     [boundary_pixels, ~] = bwboundaries(color_comp,'noholes');
+%     figure; imshow(imerode(color_comp, strel('disk',4)));
+%     hold on
+%     for i = 1:length(boundary_pixels)
+%         boundary = boundary_pixels{i};
+%         plot(boundary(:,2), boundary(:,1), 'c', 'LineWidth', 2);
+%     end
+%     color_comp = 1 - imbinarize(im2double(color_comp(:, :, 1)));
+%     color_comp = imerode(color_comp, strel("disk", 5));
     figure; imshow(edge(color_comp, "canny"));
 %     fltr_dIdy = [ -1 -2 -1; 0 0 0 ; +1 +2 +1 ] / 8;
 %     fltr_dIdx = [ -1 0 +1; -2 0 +2 ; -1 0 +1 ] / 8;
@@ -56,12 +68,18 @@ end
 
 
 function b_is_fg = segment( im )
-
+    disp(size(im))
     im_contrast = max(im(:)) - min(im(:));
     if im_contrast < 0.9700                                                 % enhance contrast if necessary
-        im = adapthisteq(im);
+        im_lab = rgb2lab(im);
+        max_luminosity = 100;
+        L = im_lab(:,:,1)/max_luminosity;
+        im_adapthisteq = im_lab;
+        im_adapthisteq(:,:,1) = adapthisteq(L)*max_luminosity;
+        im = lab2rgb(im_adapthisteq);
     end
     GET_USER_INPUT = true;
+    figure;
     imagesc( im );
     axis image;
     if ( GET_USER_INPUT )
