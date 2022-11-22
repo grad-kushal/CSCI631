@@ -15,10 +15,9 @@ function project()
         for i = 1:numberOfFiles                                             % For each image
             currentFile = files(i).name;
             imrgb = im2double(imread(currentFile));
-            imrgb = imcrop(imrgb, [500 500 5500 3500]);                   % Cropping out the irrelevant part
-            segment_and_get_edges(imrgb, currentFile);                                   % Calling the function to segment the image and get edge details
-%             clc
-%             close all;
+            imrgb = imcrop(imrgb, [450 450 5500 3300]);                     % Cropping out the irrelevant part
+            segment_and_get_edges(imrgb, currentFile);                      % Calling the function to segment the image and get edge details
+            close all;
         end
         break;
     end
@@ -26,34 +25,53 @@ end
 
 function segment_and_get_edges(im, currentFile)
     color_comp = segment(im);
-    color_comp = bwareaopen(color_comp, 500, 8);                            % Remove smaller objects which are not of concern
-    color_comp = imfill(color_comp,'holes');                                % Remove holes from the leaf
-    figure; imshow(color_comp);                                             % Disply segmented image
-    details = regionprops(color_comp, 'centroid');
+    color_comp = bwareaopen(color_comp, 4900, 8);                               % Remove smaller objects which are not of concern
+    color_comp = imfill(color_comp,'holes');                                    % Remove holes from the leaf
+    figure; imshow(color_comp);                                                 % Disply segmented image
+    writefile = "out/segmented_" + currentFile + ".png";
+    imwrite(color_comp, writefile);
+    details = regionprops('table', color_comp,{'Centroid', 'Area', 'Circularity', 'Perimeter'});
+%     disp(details)
+%     imshow(color_comp)
+% %     title('Weighted (red) and Unweighted (blue) Centroids'); 
+%     hold on
+%     numObj = numel(details);
+%     for k = 1 : numObj
+%         plot(details(k).WeightedCentroid(1), details(k).WeightedCentroid(2), 'r*')
+%         plot(details(k).Centroid(1), details(k).Centroid(2), 'bo')
+%     end
+%     hold off
     disp(details)
-    figure; imshow(edge(color_comp, "canny"));
+    edges = edge(color_comp, "canny");
+    figure; imshow(edges);
+    writefile = "out/edges_" + currentFile + ".png";
+    imwrite(edges, writefile)
     fltr_dIdy = [ -1 -2 -1; 0 0 0 ; +1 +2 +1 ] / 8;
     fltr_dIdx = [ -1 0 +1; -2 0 +2 ; -1 0 +1 ] / 8;
     dIdy = imfilter( rgb2gray(im), fltr_dIdy);
     dIdx = imfilter( rgb2gray(im), fltr_dIdx);
     dImag = sqrt( dIdy.^2 + dIdx.^2 );
-%     figure; imshow(1-dImag);
-    threshold = prctile(dImag,45,"all");                                 % Get edge magnitude stronger than a threshold to get the details like veins
+    figure; imshow(1-dImag);
+    writefile = "out/edge_mags_" + currentFile + ".png";
+    imwrite(dImag, writefile);
+    threshold = prctile(dImag,45,"all");                                        % Get edge magnitude stronger than a threshold to get the details like veins
     disp("Threshold value: " + threshold);
 %     newmat = zeros(size(dImag));
 %     newmat = 1 - newmat;
     k = size(dImag);
-    newmat = dImag > threshold;                                          % Create a new image with only the edges stronger than the threshold
+    newmat = dImag > threshold;                                                 % Create a new image with only the edges stronger than the threshold
 %     figure; imshow(newmat);
     result = ones(k);
     for row =  1:k(1)        % Iterate till the last valid row.
         for col =  1:k(2)
             if newmat(row, col) ~= color_comp(row, col)                                 
-                result(row, col) = newmat(row, col);                     % Map the strong edges from the image only inside the leaf
+                result(row, col) = newmat(row, col);                            % Map the strong edges from the image only inside the leaf
             end
         end
     end
 %     figure; imshow(1-result);
+    writefile = "out/segmented_details_" + currentFile + ".png";
+    imwrite(1-result, writefile);
     greenresult = cat(3, zeros(k) , 1-result, zeros(k));
     figure; imshow(greenresult);                                         % Show the leaf with details in green
     currentFile = "out/output_" + currentFile + ".png";
@@ -77,10 +95,10 @@ function b_is_fg = segment( im )
     imagesc( im );
     axis image;
     if ( GET_USER_INPUT )
-        fprintf('Click on the Leaf\n');
+        fprintf('Click on the Leaf at least at 7-10 different points\n');
         beep();
         [rxs,rys] = ginput();
-        fprintf('Click on the Background\n');
+        fprintf('Click on the Background at least at 7-10 different points\n');
         beep();
         [bgxs,bgys] = ginput();
         save temp_matrix.mat rxs rys bgxs bgys;
