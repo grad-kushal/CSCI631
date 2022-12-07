@@ -10,21 +10,38 @@ function project()
     for index = 1:length(directories_on_path)
         if contains(directories_on_path(index),"TEST_IMAGES")
         %         files = show_all_files_in_dir(directories_on_path(index));
-            patterns = ["/*.JPG"];
+            input_dir      = 'out';
+            classes                   = '10';
+            patterns = ["/segmented_IVY*.png" "/segmented_*2000_x_3000*.png"];
+
+            initialize_the_feature_table    = true;
+
+            for class_id = 1:length(classes)
+
+                this_cls_pattern = patterns(class_id);
+                disp(this_cls_pattern);
+                training_files  = dir( this_cls_pattern );
+
+                for idx = 1 : length( training_files )
+                    currentFile       = sprintf('%s%c%s', input_dir, filesep(), training_files(idx).name );
+                    fprintf('%s\n', fn_in );
+                    imrgb = im2double(imread(currentFile));
+                    imrgb = imcrop(imrgb, [450 450 5500 3300]);                                         % Cropping out the irrelevant part
+                    mat_list = [mat_list; segment_and_get_edges(imrgb, currentFile)];
+                end
+            end
+              patterns = ["/*3155.JPG"];
             files = dir(directories_on_path(index) + patterns(1));
         end
-        mat_list = [];
+        mat_list = []
         numberOfFiles = length(files);
         for i = 1:numberOfFiles                                                                 % For each image
             currentFile = files(i).name;
-            imrgb = im2double(imread(currentFile));
-            imrgb = imcrop(imrgb, [450 450 5500 3300]);                                         % Cropping out the irrelevant part
-            mat_list = [mat_list; segment_and_get_edges(imrgb, currentFile)];                   % Calling the function to segment the image and get edge details
+                               % Calling the function to segment the image and get edge details
             close all;
         end
         break;
     end
-    disp(mat_list);
 end
 
 function feature_mat = segment_and_get_edges(im, currentFile)
@@ -78,6 +95,10 @@ function feature_mat = segment_and_get_edges(im, currentFile)
     figure; imshow(greenresult);                                                % Show the leaf with details in green
     currentFile = "out/output_" + currentFile + ".png";
     imwrite(greenresult, currentFile)
+end
+
+function get_feature_mat()
+    
 end
 
 function b_is_fg = segment( im )
